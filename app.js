@@ -38,21 +38,31 @@ const defaultTasks = [
   }),
 ];
 
-Task.insertMany(defaultTasks, (err) => {
-  if (err) {
-    console.log(err);
-  } else {
-    console.log("Successfully saved default tasks to DB!");
-  }
-});
-
 const listName_work = "Work List";
 const itemList = ["Buy Food", "Cook Food", "Eat Food"];
 const workItemList = [];
 
 app.get("/", (req, res) => {
   const dayOfTheWeek = dateHelper.getDate();
-  res.render("list", { listName: dayOfTheWeek, newItemList: itemList });
+
+  Task.find({}, (err, tasks) => {
+    if (err) {
+      console.log(err);
+    } else {
+      if (tasks.length === 0) {
+        Task.insertMany(defaultTasks, (err) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("Successfully saved default tasks to DB!");
+            res.redirect("/");
+          }
+        });
+      } else {
+        res.render("list", { listName: dayOfTheWeek, newItemList: tasks });
+      }
+    }
+  });
 });
 
 app.get("/work", (req, res) => {
