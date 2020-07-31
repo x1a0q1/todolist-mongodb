@@ -90,6 +90,17 @@ app.post("/", (req, res) => {
   }
 });
 
+app.post("/delete", (req, res) => {
+  Task.findByIdAndRemove(req.body.checkedItem, (err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(`_id: ${req.body.checkedItem} deleted!`);
+      res.redirect("/");
+    }
+  });
+});
+
 app.listen(localPORT, () => {
   console.log(`Server Started on port: ${localPORT}`);
 });
