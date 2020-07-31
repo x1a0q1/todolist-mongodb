@@ -14,6 +14,7 @@ app.set("view engine", "ejs");
 
 mongoose.connect(`mongodb://localhost:27017/${todolistDB}`, {
   useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 
 const taskSchema = new mongoose.Schema({
@@ -39,7 +40,6 @@ const defaultTasks = [
 ];
 
 const listName_work = "Work List";
-const itemList = ["Buy Food", "Cook Food", "Eat Food"];
 const workItemList = [];
 
 app.get("/", (req, res) => {
@@ -82,7 +82,10 @@ app.post("/", (req, res) => {
     workItemList.push(req.body.newItem);
     res.redirect("/work");
   } else {
-    itemList.push(req.body.newItem);
+    const newTask = new Task({
+      taskName: req.body.newItem,
+    });
+    newTask.save();
     res.redirect("/");
   }
 });
