@@ -26,6 +26,13 @@ const taskSchema = new mongoose.Schema({
 
 const Task = mongoose.model("Task", taskSchema);
 
+const listSchema = new mongoose.Schema({
+  listName: String,
+  tasks: [taskSchema],
+});
+
+const List = mongoose.model("List", listSchema);
+
 // 3 Default Items for initial running
 const defaultTasks = [
   new Task({
@@ -38,9 +45,6 @@ const defaultTasks = [
     taskName: "<-- Hit this to complete a task.",
   }),
 ];
-
-const listName_work = "Work List";
-const workItemList = [];
 
 app.get("/", (req, res) => {
   const dayOfTheWeek = dateHelper.getDate();
@@ -65,11 +69,25 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/work", (req, res) => {
-  const weekDay = dateHelper.getDay();
-  res.render("list", {
-    listName: `${weekDay}'s ${listName_work}`,
-    newItemList: workItemList,
+app.get("/:customlistName", (req, res) => {
+  List.findOne({ listName: req.params.customlistName }, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      if (result === null) {
+        const list = new List({
+          listName: req.params.customlistName,
+          tasks: defaultTasks,
+        });
+        list.save();
+        res.redirect(`/${req.params.customlistName}`);
+      } else {
+        res.render("list", {
+          listName: result.listName,
+          newItemList: result.tasks,
+        });
+      }
+    }
   });
 });
 
