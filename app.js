@@ -115,14 +115,28 @@ app.post("/", (req, res) => {
 });
 
 app.post("/delete", (req, res) => {
-  Task.findByIdAndRemove(req.body.checkedItem, (err) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log(`_id: ${req.body.checkedItem} deleted!`);
-      res.redirect("/");
-    }
-  });
+  if (req.body.listTitle === defaultListTitle) {
+    Task.findByIdAndRemove(req.body.checkedItem, (err) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(`_id: ${req.body.checkedItem} deleted!`);
+        res.redirect("/");
+      }
+    });
+  } else {
+    List.findOneAndUpdate(
+      { listTitle: req.body.listTitle },
+      { $pull: { tasks: { _id: req.body.checkedItem } } },
+      (err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.redirect(`/${req.body.listTitle}`);
+        }
+      }
+    );
+  }
 });
 
 app.listen(localPORT, () => {
