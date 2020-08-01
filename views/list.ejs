@@ -3,7 +3,7 @@
   <%- include("header"); -%>
   <body>
     <div class="box">
-      <h1 id="heading"><%= listName %></h1>
+      <h1 id="heading"><%= listTitle %></h1>
     </div>
     <div class="box">
       <% newItemList.forEach(item => { %>
@@ -22,7 +22,7 @@
 
       <form class="item" action="/" method="post" autocomplete="off">
         <input type="text" name="newItem" placeholder="New Item" required />
-        <button type="submit" name="btn" value="<%= listName %>">+</button>
+        <button type="submit" name="btn" value="<%= listTitle %>">+</button>
       </form>
     </div>
   </body>

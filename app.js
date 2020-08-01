@@ -27,7 +27,7 @@ const taskSchema = new mongoose.Schema({
 const Task = mongoose.model("Task", taskSchema);
 
 const listSchema = new mongoose.Schema({
-  listName: String,
+  listTitle: String,
   tasks: [taskSchema],
 });
 
@@ -63,27 +63,27 @@ app.get("/", (req, res) => {
           }
         });
       } else {
-        res.render("list", { listName: dayOfTheWeek, newItemList: tasks });
+        res.render("list", { listTitle: dayOfTheWeek, newItemList: tasks });
       }
     }
   });
 });
 
-app.get("/:customlistName", (req, res) => {
-  List.findOne({ listName: req.params.customlistName }, (err, result) => {
+app.get("/:customlistTitle", (req, res) => {
+  List.findOne({ listTitle: req.params.customlistTitle }, (err, result) => {
     if (err) {
       console.log(err);
     } else {
       if (result === null) {
         const list = new List({
-          listName: req.params.customlistName,
+          listTitle: req.params.customlistTitle,
           tasks: defaultTasks,
         });
         list.save();
-        res.redirect(`/${req.params.customlistName}`);
+        res.redirect(`/${req.params.customlistTitle}`);
       } else {
         res.render("list", {
-          listName: result.listName,
+          listTitle: result.listTitle,
           newItemList: result.tasks,
         });
       }
