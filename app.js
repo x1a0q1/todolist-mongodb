@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const _ = require("lodash");
 
 const localPORT = 3000;
 const todolistDB = "todolistDB";
@@ -69,17 +70,18 @@ app.get("/", (req, res) => {
 });
 
 app.get("/:customlistTitle", (req, res) => {
-  List.findOne({ listTitle: req.params.customlistTitle }, (err, result) => {
+  const customlistTitle = _.capitalize(req.params.customlistTitle);
+  List.findOne({ listTitle: customlistTitle }, (err, result) => {
     if (err) {
       console.log(err);
     } else {
       if (result === null) {
         const list = new List({
-          listTitle: req.params.customlistTitle,
+          listTitle: customlistTitle,
           tasks: defaultTasks,
         });
         list.save();
-        res.redirect(`/${req.params.customlistTitle}`);
+        res.redirect(`/${customlistTitle}`);
       } else {
         res.render("list", {
           listTitle: result.listTitle,
