@@ -96,16 +96,11 @@ app.get("/about", (req, res) => {
 });
 
 app.post("/", (req, res) => {
-  if (req.body.btn === listName_work) {
-    workItemList.push(req.body.newItem);
-    res.redirect("/work");
-  } else {
-    const newTask = new Task({
-      taskName: req.body.newItem,
-    });
-    newTask.save();
-    res.redirect("/");
-  }
+  const newTask = new Task({
+    taskName: req.body.newItem,
+  });
+  newTask.save();
+  res.redirect("/");
 });
 
 app.post("/delete", (req, res) => {
