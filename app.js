@@ -1,7 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const dateHelper = require(`${__dirname}/dateHelper.js`);
 
 const localPORT = 3000;
 const todolistDB = "todolistDB";
@@ -46,9 +45,9 @@ const defaultTasks = [
   }),
 ];
 
-app.get("/", (req, res) => {
-  const dayOfTheWeek = dateHelper.getDate();
+const defaultListTitle = "🔥 Just Do It! 🔥";
 
+app.get("/", (req, res) => {
   Task.find({}, (err, tasks) => {
     if (err) {
       console.log(err);
@@ -63,7 +62,7 @@ app.get("/", (req, res) => {
           }
         });
       } else {
-        res.render("list", { listTitle: dayOfTheWeek, newItemList: tasks });
+        res.render("list", { listTitle: defaultListTitle, newItemList: tasks });
       }
     }
   });
@@ -99,8 +98,20 @@ app.post("/", (req, res) => {
   const newTask = new Task({
     taskName: req.body.newItem,
   });
-  newTask.save();
-  res.redirect("/");
+  if (req.body.btn === defaultListTitle) {
+    newTask.save();
+    res.redirect("/");
+  } else {
+    List.findOne({ listTitle: req.body.btn }, (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        result.tasks.push(newTask);
+        result.save();
+        res.redirect(`/${req.body.btn}`);
+      }
+    });
+  }
 });
 
 app.post("/delete", (req, res) => {
