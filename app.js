@@ -1,10 +1,9 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
 const _ = require("lodash");
+const todoListDB = require(`${__dirname}/todoListDB.js`);
 
-const localPORT = 3000;
-const todolistDB = "todolistDB";
+const port = process.env.PORT || 3000;
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -12,49 +11,16 @@ app.use(express.static("public"));
 
 app.set("view engine", "ejs");
 
-mongoose.connect(`mongodb://localhost:27017/${todolistDB}`, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-const taskSchema = new mongoose.Schema({
-  taskName: {
-    type: String,
-    required: [true, "I Need a Name!"],
-  },
-});
-
-const Task = mongoose.model("Task", taskSchema);
-
-const listSchema = new mongoose.Schema({
-  listTitle: String,
-  tasks: [taskSchema],
-});
-
-const List = mongoose.model("List", listSchema);
-
-// 3 Default Items for initial running
-const defaultTasks = [
-  new Task({
-    taskName: "Welcome to your todolist!",
-  }),
-  new Task({
-    taskName: "Hit the + button to add a new task.",
-  }),
-  new Task({
-    taskName: "<-- Hit this to complete a task.",
-  }),
-];
-
-const defaultListTitle = "🔥 Just Do It! 🔥";
+const db = new todoListDB();
+db.connect();
 
 app.get("/", (req, res) => {
-  Task.find({}, (err, tasks) => {
+  db.Task.find({}, (err, tasks) => {
     if (err) {
       console.log(err);
     } else {
       if (tasks.length === 0) {
-        Task.insertMany(defaultTasks, (err) => {
+        db.Task.insertMany(db.defaultTasks, (err) => {
           if (err) {
             console.log(err);
           } else {
@@ -63,7 +29,10 @@ app.get("/", (req, res) => {
           }
         });
       } else {
-        res.render("list", { listTitle: defaultListTitle, newItemList: tasks });
+        res.render("list", {
+          listTitle: db.defaultListTitle,
+          newItemList: tasks,
+        });
       }
     }
   });
@@ -71,14 +40,14 @@ app.get("/", (req, res) => {
 
 app.get("/:customlistTitle", (req, res) => {
   const customlistTitle = _.capitalize(req.params.customlistTitle);
-  List.findOne({ listTitle: customlistTitle }, (err, result) => {
+  db.List.findOne({ listTitle: customlistTitle }, (err, result) => {
     if (err) {
       console.log(err);
     } else {
       if (result === null) {
-        const list = new List({
+        const list = new db.List({
           listTitle: customlistTitle,
-          tasks: defaultTasks,
+          tasks: db.defaultTasks,
         });
         list.save();
         res.redirect(`/${customlistTitle}`);
@@ -92,19 +61,15 @@ app.get("/:customlistTitle", (req, res) => {
   });
 });
 
-app.get("/about", (req, res) => {
-  res.render("about");
-});
-
 app.post("/", (req, res) => {
-  const newTask = new Task({
+  const newTask = new db.Task({
     taskName: req.body.newItem,
   });
-  if (req.body.btn === defaultListTitle) {
+  if (req.body.btn === db.defaultListTitle) {
     newTask.save();
     res.redirect("/");
   } else {
-    List.findOne({ listTitle: req.body.btn }, (err, result) => {
+    db.List.findOne({ listTitle: req.body.btn }, (err, result) => {
       if (err) {
         console.log(err);
       } else {
@@ -117,8 +82,8 @@ app.post("/", (req, res) => {
 });
 
 app.post("/delete", (req, res) => {
-  if (req.body.listTitle === defaultListTitle) {
-    Task.findByIdAndRemove(req.body.checkedItem, (err) => {
+  if (req.body.listTitle === db.defaultListTitle) {
+    db.Task.findByIdAndRemove(req.body.checkedItem, (err) => {
       if (err) {
         console.log(err);
       } else {
@@ -127,7 +92,7 @@ app.post("/delete", (req, res) => {
       }
     });
   } else {
-    List.findOneAndUpdate(
+    db.List.findOneAndUpdate(
       { listTitle: req.body.listTitle },
       { $pull: { tasks: { _id: req.body.checkedItem } } },
       (err) => {
@@ -141,6 +106,6 @@ app.post("/delete", (req, res) => {
   }
 });
 
-app.listen(localPORT, () => {
-  console.log(`Server Started on port: ${localPORT}`);
+app.listen(port, () => {
+  console.log(`Server Started on port: ${port}`);
 });
